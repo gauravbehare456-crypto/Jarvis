@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>JARVIS AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--c1:#00ffff;--c2:#00d4ff;--c3:#00ff88;--c4:#ff6b00;--c5:#ff3355;--bg:#000;--border:rgba(0,255,255,0.22);--glow:rgba(0,255,255,0.15);--text:#e0f8ff;--text2:rgba(0,255,255,0.55);--font:'Share Tech Mono',monospace;}
+html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);}
+body{display:flex;flex-direction:column;font-family:var(--font);color:var(--text);}
+#cam-bg{position:fixed;inset:0;z-index:0;background:#000;}
+#vid{width:100%;height:100%;object-fit:cover;filter:brightness(0.55) saturate(1.3);}
+#cam-off{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:radial-gradient(ellipse at 30% 40%,#001a2e,#000);}
+#cam-off .ci{font-size:32px;}
+#cam-off .ct{font-size:9px;letter-spacing:2px;color:var(--text2);}
+#cam-off .cb{margin-top:8px;padding:6px 18px;background:rgba(0,255,255,0.08);border:1px solid var(--border);color:var(--c1);font-family:var(--font);font-size:9px;border-radius:4px;cursor:pointer;letter-spacing:1px;}
+#scanline{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+#scanline::after{content:'';position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--c1),transparent);opacity:0.18;animation:scan 5s linear infinite;}
+@keyframes scan{0%{top:-2px}100%{top:100%}}
+#grid-ov{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:linear-gradient(rgba(0,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,255,0.025) 1px,transparent 1px);background-size:40px 40px;}
+#app{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;}
+#sbar{flex-shrink:0;height:44px;background:rgba(0,0,0,0.82);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;padding:0 10px;}
+.sbl{display:flex;align-items:center;gap:8px;}
+.sbr{display:flex;align-items:center;gap:6px;}
+#logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:3px;color:var(--c1);text-shadow:0 0 10px var(--c1);}
+#clk{font-size:9px;color:var(--text2);letter-spacing:1px;}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--c3);animation:bl 1.5s ease-in-out infinite;}
+.dot.o{background:var(--c4);animation-delay:0.5s;}
+.dot.r{background:var(--c5);}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:0.15}}
+#sdot{width:7px;height:7px;border-radius:50%;background:var(--c3);box-shadow:0 0 6px var(--c3);display:none;animation:bl 0.4s infinite;}
+#sdot.on{display:block;}
+.ibtn{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);background:rgba(0,0,0,0.5);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all 0.15s;}
+.ibtn:active,.ibtn.on{background:rgba(0,255,255,0.1);border-color:var(--c1);color:var(--c1);}
+#hud-area{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.brk{position:absolute;width:20px;height:20px;border-color:var(--c1);border-style:solid;opacity:0.5;}
+.brk.tl{top:8px;left:8px;border-width:1px 0 0 1px;}
+.brk.tr{top:8px;right:8px;border-width:1px 1px 0 0;}
+.brk.bl{bottom:8px;left:8px;border-width:0 0 1px 1px;}
+.brk.br{bottom:8px;right:8px;border-width:0 1px 1px 0;}
+#dbox{position:absolute;top:8px;right:10px;text-align:right;font-size:7px;color:var(--text2);line-height:1.7;opacity:0.7;}
+#pills{position:absolute;bottom:8px;left:10px;display:flex;flex-direction:column;gap:3px;}
+.pill{font-size:7px;color:var(--text2);display:flex;align-items:center;gap:4px;}
+#ring{width:80px;height:80px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:12px;animation:spin 8s linear infinite;}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+#ring::before{content:'';position:absolute;width:58px;height:58px;border-radius:50%;border:1px dashed rgba(0,255,255,0.18);animation:spin 4s linear infinite reverse;}
+#rico{font-size:26px;animation:spin 8s linear infinite reverse;}
+#hlbl{font-size:7px;letter-spacing:3px;color:var(--c4);margin-bottom:5px;font-family:'Orbitron',monospace;}
+#htxt{font-size:9px;color:var(--c1);text-align:center;padding:0 22px;line-height:1.65;max-width:320px;opacity:0.9;text-shadow:0 0 6px rgba(0,255,255,0.3);transition:opacity 0.3s;}
+#proc{display:none;font-size:9px;letter-spacing:3px;color:var(--c4);animation:bl 0.5s infinite;margin-top:8px;font-family:'Orbitron',monospace;}
+#proc.on{display:block;}
+#vwave{display:none;align-items:flex-end;gap:2px;height:20px;margin-top:10px;}
+#vwave.on{display:flex;}
+.vb{width:2px;border-radius:2px;background:var(--c3);animation:va 0.4s ease-in-out infinite alternate;}
+.vb:nth-child(1){animation-delay:0s}.vb:nth-child(2){animation-delay:0.06s}.vb:nth-child(3){animation-delay:0.12s}.vb:nth-child(4){animation-delay:0.18s}.vb:nth-child(5){animation-delay:0.06s}.vb:nth-child(6){animation-delay:0.14s}
+@keyframes va{from{height:3px}to{height:18px}}
+#tbar{flex-shrink:0;background:rgba(0,0,0,0.82);border-top:1px solid var(--border);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);padding:5px 10px;display:flex;align-items:center;justify-content:space-between;}
+.tgrp{display:flex;gap:5px;align-items:center;}
+.tbtn{width:34px;height:34px;border-radius:6px;border:1px solid var(--border);background:rgba(0,0,0,0.5);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all 0.15s;flex-shrink:0;}
+.tbtn:active,.tbtn.on{background:rgba(0,255,255,0.1);border-color:var(--c1);color:var(--c1);box-shadow:0 0 8px var(--glow);}
+.tbtn.rec{background:rgba(255,51,85,0.15);border-color:var(--c5);color:var(--c5);animation:pr 0.8s infinite;}
+@keyframes pr{0%,100%{box-shadow:0 0 6px rgba(255,51,85,0.3)}50%{box-shadow:0 0 18px rgba(255,51,85,0.7)}}
+.tbtn.yon{background:rgba(255,107,0,0.1);border-color:var(--c4);color:var(--c4);}
+#lsel{background:rgba(0,0,0,0.6);border:1px solid var(--border);color:var(--c1);font-family:var(--font);font-size:9px;padding:4px 5px;border-radius:5px;outline:none;cursor:pointer;max-width:82px;}
+#ibar{flex-shrink:0;background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);padding:6px 10px 8px;}
+#fprev{display:none;gap:5px;flex-wrap:wrap;margin-bottom:5px;}
+#fprev.on{display:flex;}
+.fchip{display:flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;background:rgba(0,255,255,0.06);border:1px solid var(--border);font-size:9px;color:var(--c1);}
+.fdel{background:none;border:none;color:var(--c5);cursor:pointer;font-size:11px;padding:0 1px;line-height:1;}
+.irow{display:flex;gap:6px;align-items:flex-end;}
+#tin{flex:1;background:rgba(0,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--c1);font-family:var(--font);font-size:11px;outline:none;resize:none;min-height:36px;max-height:88px;caret-color:var(--c1);}
+#tin::placeholder{color:rgba(0,255,255,0.28);font-size:10px;}
+#tin:focus{border-color:rgba(0,255,255,0.42);}
+#sbtn{width:36px;height:36px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--c1),var(--c2));color:#000;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:bold;}
+.panel{position:fixed;top:0;bottom:0;z-index:9999;width:285px;max-width:92vw;background:rgba(0,2,8,0.98);border:1px solid var(--border);backdrop-filter:blur(16px);display:flex;flex-direction:column;transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);}
+#logp{left:0;transform:translateX(-110%);}
+#logp.open{transform:translateX(0);}
+#setp{right:0;transform:translateX(110%);}
+#setp.open{transform:translateX(0);}
+#bkdrop{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.6);display:none;}
+#bkdrop.on{display:block;}
+.ph{padding:11px 12px 9px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.pt{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:2px;color:var(--c4);}
+.pc{background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;padding:0 3px;line-height:1;}
+.pb{flex:1;overflow-y:auto;padding:10px;}
+.pb::-webkit-scrollbar{width:3px;}
+.pb::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.lmsg{margin-bottom:10px;font-size:10px;line-height:1.5;}
+.lmsg .ll{font-size:8px;letter-spacing:1px;margin-bottom:2px;}
+.lmsg.user .ll{color:var(--c4);}
+.lmsg.ai .ll{color:var(--c1);}
+.lmsg .lt{opacity:0.8;}
+.ss{margin-bottom:15px;}
+.st{font-size:8px;letter-spacing:2px;color:var(--c4);margin-bottom:8px;border-bottom:1px solid rgba(255,107,0,0.2);padding-bottom:3px;}
+.pvg{display:flex;gap:5px;margin-bottom:9px;}
+.pbtn{flex:1;padding:6px 3px;border-radius:4px;border:1px solid var(--border);background:rgba(0,0,0,0.4);color:var(--text2);font-family:var(--font);font-size:8px;cursor:pointer;letter-spacing:0.5px;transition:all 0.15s;text-align:center;}
+.pbtn.sel{background:rgba(0,255,255,0.1);border-color:var(--c1);color:var(--c1);}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.tcard{padding:7px;border-radius:6px;border:1px solid var(--border);cursor:pointer;text-align:center;font-size:8px;letter-spacing:1px;transition:all 0.2s;background:rgba(0,0,0,0.4);}
+.tcard.sel{border-color:var(--c1);box-shadow:0 0 10px var(--glow);}
+.tsw{width:100%;height:14px;border-radius:3px;margin-bottom:4px;}
+.srow{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;}
+.sl{font-size:9px;color:var(--text2);white-space:nowrap;}
+.sv{font-size:9px;color:var(--c1);min-width:30px;text-align:right;}
+input[type=range]{flex:1;accent-color:var(--c1);height:3px;}
+input[type=color]{width:28px;height:22px;border:1px solid var(--border);border-radius:4px;padding:1px;background:none;cursor:pointer;}
+.trow{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.tl{font-size:9px;color:var(--text2);}
+.tog{width:32px;height:16px;border-radius:8px;background:rgba(0,255,255,0.08);border:1px solid var(--border);cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;}
+.tog.on{background:rgba(0,255,255,0.28);border-color:var(--c1);}
+.tog::after{content:'';position:absolute;width:12px;height:12px;border-radius:50%;background:var(--text2);top:1px;left:1px;transition:left 0.2s;}
+.tog.on::after{left:17px;background:var(--c1);}
+.vgrow{display:flex;gap:6px;margin-bottom:8px;}
+.vgbtn{flex:1;padding:5px;border-radius:4px;border:1px solid var(--border);background:rgba(0,0,0,0.4);color:var(--text2);font-family:var(--font);font-size:9px;cursor:pointer;transition:all 0.15s;text-align:center;}
+.vgbtn.sel{background:rgba(0,255,255,0.1);border-color:var(--c1);color:var(--c1);}
+.crow{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.cl{font-size:9px;color:var(--text2);}
+.sbtn2{width:100%;padding:8px;border-radius:5px;border:1px solid var(--c3);background:rgba(0,255,136,0.08);color:var(--c3);cursor:pointer;font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;margin-top:4px;}
+.ainput{width:100%;background:rgba(0,0,0,0.6);border:1px solid var(--border);color:var(--c1);font-family:var(--font);font-size:10px;padding:8px 10px;border-radius:5px;outline:none;margin-bottom:6px;}
+.ainput::placeholder{color:rgba(0,255,255,0.3);}
+.abtn{width:100%;padding:7px;border-radius:5px;border:1px solid var(--c4);background:rgba(255,107,0,0.08);color:var(--c4);font-family:var(--font);font-size:9px;cursor:pointer;letter-spacing:1px;}
+#kst{text-align:center;font-size:8px;margin-top:5px;display:none;letter-spacing:1px;}
+#fi1,#fi2{display:none;}
+</style>
+</head>
+<body>
+<div id="cam-bg">
+  <video id="vid" autoplay playsinline muted></video>
+  <div id="cam-off">
+    <div class="ci">&#128247;</div>
+    <div class="ct">CAMERA OFFLINE</div>
+    <button class="cb" onclick="startCam()">&#9654; ENABLE CAMERA</button>
+  </div>
+</div>
+<div id="scanline"></div>
+<div id="grid-ov"></div>
+<div id="app">
+  <div id="sbar">
+    <div class="sbl">
+      <span id="logo">JARVIS</span>
+      <div class="dot"></div><div class="dot o"></div>
+      <div id="sdot"></div>
+    </div>
+    <span id="clk">--:--:--</span>
+    <div class="sbr">
+      <button class="ibtn" id="logbtn" onclick="openPanel('log')">&#128172;</button>
+      <button class="ibtn" id="setbtn" onclick="openPanel('set')">&#9881;&#65039;</button>
+    </div>
+  </div>
+  <div id="hud-area">
+    <div class="brk tl"></div><div class="brk tr"></div>
+    <div class="brk bl"></div><div class="brk br"></div>
+    <div id="dbox">
+      <div id="dhud">-- --- ----</div>
+      <div style="color:rgba(255,107,0,0.55)">&#128205; NAGPUR, MH</div>
+    </div>
+    <div id="pills">
+      <div class="pill"><div class="dot" style="width:4px;height:4px"></div>AI ONLINE</div>
+      <div class="pill"><div class="dot o" style="width:4px;height:4px"></div>VOICE READY</div>
+      <div class="pill" id="pcam"><div class="dot r" style="width:4px;height:4px"></div>CAM OFF</div>
+    </div>
+    <div id="ring"><span id="rico">&#129302;</span></div>
+    <div id="hlbl">&#9672; JARVIS RESPONSE &#9672;</div>
+    <div id="htxt">SYSTEMS ONLINE. AWAITING COMMAND, SIR.</div>
+    <div id="proc">&#9881; PROCESSING...</div>
+    <div id="vwave">
+      <div class="vb"></div><div class="vb"></div><div class="vb"></div>
+      <div class="vb"></div><div class="vb"></div><div class="vb"></div>
+    </div>
+  </div>
+  <div id="tbar">
+    <div class="tgrp">
+      <button class="tbtn" id="cbtn" onclick="toggleCam()" title="Camera">&#128247;</button>
+      <button class="tbtn" onclick="snapPhoto()" title="Snapshot">&#128248;</button>
+      <button class="tbtn" onclick="document.getElementById('fi2').click()" title="Image">&#128444;&#65039;</button>
+      <button class="tbtn" onclick="document.getElementById('fi1').click()" title="File">&#128206;</button>
+      <button class="tbtn" id="wbtn" onclick="toggleWeb()" title="Web">&#127760;</button>
+    </div>
+    <div class="tgrp">
+      <select id="lsel" onchange="setLang(this.value)">
+        <option value="mr-IN" selected>&#127470;&#127475; &#2350;&#2352;&#2366;&#2336;&#2368;</option>
+        <option value="hi-IN">&#127470;&#127475; &#2361;&#2367;&#2306;&#2342;&#2368;</option>
+        <option value="en-US">&#127482;&#127480; English</option>
+        <option value="te-IN">&#3108;&#3142;&#3122;&#3137;&#3095;&#3137;</option>
+        <option value="ta-IN">&#2980;&#2990;&#3007;&#2996;&#3021;</option>
+        <option value="fr-FR">&#127467;&#127479; FR</option>
+        <option value="es-ES">&#127466;&#127480; ES</option>
+        <option value="de-DE">&#127465;&#127466; DE</option>
+        <option value="ja-JP">&#127471;&#127477; JA</option>
+        <option value="zh-CN">&#127464;&#127475; ZH</option>
+      </select>
+    </div>
+  </div>
+  <div id="ibar">
+    <div id="fprev"></div>
+    <div class="irow">
+      <button class="tbtn" id="mbtn" onclick="toggleMic()" style="width:36px;height:36px;font-size:18px;">&#127897;&#65039;</button>
+      <textarea id="tin" placeholder="&#9672; Command / &#2348;&#2379;&#2354;&#2366; / &#2310;&#2342;&#2375;&#2358;..." rows="1"
+        onkeydown="onKey(event)" oninput="resizeTin(this)"></textarea>
+      <button id="sbtn" onclick="doSend()">&#10148;</button>
+    </div>
+  </div>
+</div>
+<div id="bkdrop" onclick="closePanel()"></div>
+<div class="panel" id="logp">
+  <div class="ph"><span class="pt">&#9672; CHAT LOG</span><button class="pc" onclick="closePanel()">&#10005;</button></div>
+  <div class="pb" id="logbody"></div>
+</div>
+<div class="panel" id="setp">
+  <div class="ph"><span class="pt">&#9881; SETTINGS</span><button class="pc" onclick="closePanel()">&#10005;</button></div>
+  <div class="pb">
+    <div class="ss" style="border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;background:rgba(255,107,0,0.03);">
+      <div class="st" style="color:var(--c4);">&#128273; AI PROVIDER &amp; API KEY</div>
+      <div class="pvg">
+        <button class="pbtn sel" id="pg" onclick="setProv('gemini',this)">&#128309; Gemini<br><span style="color:var(--c3);font-size:7px;">FREE</span></button>
+        <button class="pbtn" id="po" onclick="setProv('openai',this)">&#128994; OpenAI<br><span style="font-size:7px;">Paid</span></button>
+        <button class="pbtn" id="pc2" onclick="setProv('claude',this)">&#128995; Claude<br><span style="font-size:7px;">Trial</span></button>
+      </div>
+      <div id="ahint" style="font-size:8px;color:var(--text2);margin-bottom:7px;line-height:1.6;">&#127311; FREE! aistudio.google.com &#2357;&#2352; &#2332;&#2366; &#8594; Get API Key</div>
+      <input type="password" id="ainp" class="ainput" placeholder="AIzaSy...">
+      <button class="abtn" onclick="saveKey()">&#128190; SAVE API KEY</button>
+      <div id="kst"></div>
+    </div>
+    <div class="ss" style="margin-top:12px;">
+      <div class="st">&#127912; COLOR THEMES</div>
+      <div class="tgrid">
+        <div class="tcard sel" data-t="cyan" onclick="applyTheme('cyan',this)"><div class="tsw" style="background:linear-gradient(90deg,#00ffff,#00d4ff)"></div>CYAN HUD</div>
+        <div class="tcard" data-t="green" onclick="applyTheme('green',this)"><div class="tsw" style="background:linear-gradient(90deg,#00ff88,#00cc66)"></div>MATRIX</div>
+        <div class="tcard" data-t="orange" onclick="applyTheme('orange',this)"><div class="tsw" style="background:linear-gradient(90deg,#ff6b00,#ffaa00)"></div>IRON MAN</div>
+        <div class="tcard" data-t="purple" onclick="applyTheme('purple',this)"><div class="tsw" style="background:linear-gradient(90deg,#a855f7,#7c3aed)"></div>PHANTOM</div>
+        <div class="tcard" data-t="red" onclick="applyTheme('red',this)"><div class="tsw" style="background:linear-gradient(90deg,#ff3355,#cc0033)"></div>DANGER</div>
+        <div class="tcard" data-t="gold" onclick="applyTheme('gold',this)"><div class="tsw" style="background:linear-gradient(90deg,#ffd700,#ffaa00)"></div>GOLD</div>
+        <div class="tcard" data-t="blue" onclick="applyTheme('blue',this)"><div class="tsw" style="background:linear-gradient(90deg,#3b82f6,#1d4ed8)"></div>NAVY</div>
+        <div class="tcard" data-t="white" onclick="applyTheme('white',this)"><div class="tsw" style="background:linear-gradient(90deg,#fff,#ccc)"></div>GHOST</div>
+      </div>
+    </div>
+    <div class="ss">
+      <div class="st">&#128161; DISPLAY</div>
+      <div class="srow"><span class="sl">Cam Brightness</span><input type="range" id="sbr" min="20" max="100" value="55" oninput="setBr(this.value)"><span class="sv" id="vbr">55%</span></div>
+      <div class="srow"><span class="sl">HUD Text Size</span><input type="range" id="sht" min="7" max="16" value="9" oninput="setHSz(this.value)"><span class="sv" id="vht">9px</span></div>
+      <div class="srow"><span class="sl">Grid Lines</span><input type="range" id="sgr" min="0" max="10" value="2" oninput="setGrid(this.value)"><span class="sv" id="vgr">2</span></div>
+    </div>
+    <div class="ss">
+      <div class="st">&#128295; FEATURES</div>
+      <div class="trow"><span class="tl">Scan Line</span><div class="tog on" id="tsc" onclick="togF('scan',this)"></div></div>
+      <div class="trow"><span class="tl">Grid Overlay</span><div class="tog on" id="tgr" onclick="togF('grid',this)"></div></div>
+      <div class="trow"><span class="tl">Auto Speak</span><div class="tog on" id="tsp" onclick="togF('speak',this)"></div></div>
+      <div class="trow"><span class="tl">Corner Brackets</span><div class="tog on" id="tbr" onclick="togF('brk',this)"></div></div>
+      <div class="trow"><span class="tl">Center Ring</span><div class="tog on" id="trg" onclick="togF('ring',this)"></div></div>
+    </div>
+    <div class="ss">
+      <div class="st">&#127897; VOICE</div>
+      <div class="vgrow">
+        <button class="vgbtn sel" id="vgf" onclick="setGend('female',this)">&#9792; Female</button>
+        <button class="vgbtn" id="vgm" onclick="setGend('male',this)">&#9794; Male</button>
+      </div>
+      <select id="vsel" style="width:100%;background:rgba(0,0,0,0.6);border:1px solid var(--border);color:var(--c1);font-family:var(--font);font-size:9px;padding:5px;border-radius:5px;outline:none;margin-bottom:8px;" onchange="S.vName=this.value">
+        <option value="">AUTO</option>
+      </select>
+      <div class="srow"><span class="sl">Speed</span><input type="range" id="srt" min="0.5" max="1.8" step="0.05" value="0.95" oninput="S.vRate=parseFloat(this.value);document.getElementById('vrt').textContent=parseFloat(this.value).toFixed(2)+'x'"><span class="sv" id="vrt">0.95x</span></div>
+      <div class="srow"><span class="sl">Pitch</span><input type="range" id="spt" min="0.5" max="2.0" step="0.05" value="1.0" oninput="S.vPitch=parseFloat(this.value);document.getElementById('vpt').textContent=parseFloat(this.value).toFixed(2)"><span class="sv" id="vpt">1.00</span></div>
+      <div class="srow"><span class="sl">Volume</span><input type="range" id="svl" min="0.1" max="1.0" step="0.05" value="1.0" oninput="S.vVol=parseFloat(this.value);document.getElementById('vvl').textContent=Math.round(this.value*100)+'%'"><span class="sv" id="vvl">100%</span></div>
+      <button onclick="prevVoice()" style="width:100%;padding:7px;border-radius:5px;border:1px solid var(--border);background:rgba(0,255,255,0.05);color:var(--c1);font-family:var(--font);font-size:9px;cursor:pointer;letter-spacing:1px;">&#9654; PREVIEW VOICE</button>
+    </div>
+    <div class="ss">
+      <div class="st">&#128396; CUSTOM COLORS</div>
+      <div class="crow"><span class="cl">Primary</span><input type="color" id="cc1" value="#00ffff" oninput="setCV('c1',this.value)"></div>
+      <div class="crow"><span class="cl">Accent</span><input type="color" id="cc4" value="#ff6b00" oninput="setCV('c4',this.value)"></div>
+      <div class="crow"><span class="cl">Background</span><input type="color" id="ccb" value="#000000" oninput="setCV('bg',this.value)"></div>
+    </div>
+    <button class="sbtn2" onclick="saveSett()">&#128190; SAVE ALL SETTINGS</button>
+    <div id="smsg" style="text-align:center;font-size:8px;color:var(--c3);margin-top:6px;display:none;letter-spacing:1px;">&#10003; SAVED!</div>
+  </div>
+</div>
+<input type="file" id="fi1" accept="*/*" multiple onchange="attachF(event)">
+<input type="file" id="fi2" accept="image/*,video/*" multiple onchange="attachF(event)">
+<script>
+var S={lang:'mr-IN',webOn:false,busy:false,camOn:false,recOn:false,msgs:[],files:[],snap:null,stream:null,rec:null,apiKey:'',apiType:'gemini',vGender:'female',vName:'',vRate:0.95,vPitch:1.0,vVol:1.0,feats:{scan:true,grid:true,speak:true,brk:true,ring:true}};
+function setHUD(t){var e=document.getElementById('htxt');e.style.opacity='0';e.textContent=t.length>200?t.substring(0,197)+'...':t;setTimeout(function(){e.style.opacity='0.9';},40);}
+function setProc(on){document.getElementById('proc').classList.toggle('on',on);S.busy=on;}
+function tick(){var n=new Date(),p=function(x){return String(x).padStart(2,'0');};document.getElementById('clk').textContent=p(n.getHours())+':'+p(n.getMinutes())+':'+p(n.getSeconds());var D=['SUN','MON','TUE','WED','THU','FRI','SAT'],M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];document.getElementById('dhud').textContent=D[n.getDay()]+' '+p(n.getDate())+' '+M[n.getMonth()]+' '+n.getFullYear();}
+setInterval(tick,1000);tick();
+function openPanel(id){var lp=document.getElementById('logp'),sp=document.getElementById('setp'),bd=document.getElementById('bkdrop');lp.classList.remove('open');sp.classList.remove('open');bd.classList.remove('on');if(id==='log'){lp.classList.add('open');bd.classList.add('on');}else if(id==='set'){sp.classList.add('open');bd.classList.add('on');}}
+function closePanel(){document.getElementById('logp').classList.remove('open');document.getElementById('setp').classList.remove('open');document.getElementById('bkdrop').classList.remove('on');}
+function addLog(role,txt,img){var b=document.getElementById('logbody'),d=document.createElement('div');d.className='lmsg '+role;var safe=txt.replace(/&/g,'&amp;').replace(/</g,'&lt;');d.innerHTML='<div class="ll">'+(role==='user'?'YOU':'JARVIS')+'</div><div class="lt">'+safe.substring(0,400)+'</div>';if(img){var im=document.createElement('img');im.src=img;im.style.cssText='max-width:100%;border-radius:4px;border:1px solid var(--border);margin-top:4px;';d.appendChild(im);}b.appendChild(d);b.scrollTop=b.scrollHeight;}
+async function startCam(){var tries=[{video:{facingMode:'environment'},audio:false},{video:{facingMode:'user'},audio:false},{video:true,audio:false}];for(var i=0;i<tries.length;i++){try{var st=await navigator.mediaDevices.getUserMedia(tries[i]);S.stream=st;var v=document.getElementById('vid');v.srcObject=st;await v.play();document.getElementById('cam-off').style.display='none';S.camOn=true;document.getElementById('cbtn').classList.add('on');document.getElementById('pcam').innerHTML='<div class="dot" style="width:4px;height:4px"></div>CAM ON';setHUD('CAMERA ONLINE. VISUAL SYSTEMS ACTIVE.');return;}catch(e){continue;}}setHUD('CAMERA UNAVAILABLE. AUDIO MODE ACTIVE.');}
+function toggleCam(){if(S.camOn){if(S.stream)S.stream.getTracks().forEach(function(t){t.stop();});S.stream=null;document.getElementById('vid').srcObject=null;document.getElementById('cam-off').style.display='flex';document.getElementById('cbtn').classList.remove('on');S.camOn=false;document.getElementById('pcam').innerHTML='<div class="dot r" style="width:4px;height:4px"></div>CAM OFF';setHUD('CAMERA OFFLINE.');}else{startCam();}}
+function snapPhoto(){var v=document.getElementById('vid');if(!S.camOn||!v.srcObject){setHUD('ENABLE CAMERA FIRST.');return;}var cv=document.createElement('canvas');cv.width=v.videoWidth||640;cv.height=v.videoHeight||480;cv.getContext('2d').drawImage(v,0,0);S.snap=cv.toDataURL('image/jpeg',0.82);addChip('SNAP','snap');setHUD('SNAPSHOT CAPTURED.');}
+function attachF(e){Array.from(e.target.files).forEach(function(f){var r=new FileReader();r.onload=function(ev){var idx=S.files.length;S.files.push({name:f.name,type:f.type,data:ev.target.result});addChip(f.name.substring(0,14),idx);};r.readAsDataURL(f);});e.target.value='';}
+function addChip(lbl,idx){var row=document.getElementById('fprev');row.classList.add('on');var ch=document.createElement('div');ch.className='fchip';var sp=document.createElement('span');sp.textContent=lbl;var btn=document.createElement('button');btn.className='fdel';btn.textContent='x';btn.onclick=function(){ch.remove();if(idx==='snap')S.snap=null;else{var n=parseInt(idx);if(!isNaN(n))S.files[n]=null;}if(!document.querySelector('.fchip'))row.classList.remove('on');};ch.appendChild(sp);ch.appendChild(btn);row.appendChild(ch);}
+function clearFiles(){S.snap=null;S.files=[];var r=document.getElementById('fprev');r.innerHTML='';r.classList.remove('on');}
+function toggleWeb(){S.webOn=!S.webOn;document.getElementById('wbtn').classList.toggle('yon',S.webOn);setHUD(S.webOn?'WEB SEARCH ENABLED.':'WEB SEARCH DISABLED.');}
+function setLang(v){S.lang=v;S.vName='';var sel=document.getElementById('vsel');if(sel)sel.value='';setTimeout(buildVL,200);}
+var HINTS={gemini:'FREE! aistudio.google.com -> Get API Key (AIzaSy...)',openai:'platform.openai.com -> API Keys (sk-proj-...)',claude:'console.anthropic.com -> API Keys (sk-ant-...)'};
+var PHOLD={gemini:'AIzaSy...',openai:'sk-proj-...',claude:'sk-ant-...'};
+function setProv(type,btn){S.apiType=type;document.querySelectorAll('.pbtn').forEach(function(b){b.classList.remove('sel');});btn.classList.add('sel');document.getElementById('ahint').textContent=HINTS[type]||'';document.getElementById('ainp').placeholder=PHOLD[type]||'';try{localStorage.setItem('j-type',type);}catch(e){}}
+function saveKey(){var key=document.getElementById('ainp').value.trim();var type=S.apiType||'gemini';var ok=(type==='gemini'&&key.indexOf('AIza')===0)||(type!=='gemini'&&key.indexOf('sk-')===0);var st=document.getElementById('kst');if(!key||!ok){st.style.display='block';st.style.color='var(--c5)';st.textContent=type==='gemini'?'Key AIzaSy... ne suru hone aavashyak!':'Key sk- ne suru hone aavashyak!';return;}S.apiKey=key;try{localStorage.setItem('j-key',key);localStorage.setItem('j-type',type);}catch(e){}st.style.display='block';st.style.color='var(--c3)';st.textContent='KEY SAVED! JARVIS READY!';setTimeout(function(){st.style.display='none';},3000);setHUD('API KEY SAVED. I AM READY TO ASSIST YOU, SIR!');speak('API key save jhali. JARVIS ready ahe sar.');closePanel();}
+function loadKey(){try{var k=localStorage.getItem('j-key');if(k){S.apiKey=k;document.getElementById('ainp').value=k;}var t=localStorage.getItem('j-type')||'gemini';S.apiType=t;var btn=document.getElementById(t==='gemini'?'pg':t==='openai'?'po':'pc2');if(btn)setProv(t,btn);}catch(e){}}
+function toggleMic(){if(S.recOn)stopRec();else startRec();}
+function startRec(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setHUD('VOICE NOT SUPPORTED. USE CHROME.');return;}try{S.rec=new SR();S.rec.lang=S.lang;S.rec.continuous=false;S.rec.interimResults=false;S.rec.onresult=function(e){var t=e.results[0][0].transcript;document.getElementById('tin').value=t;resizeTin(document.getElementById('tin'));stopRec();doSend();};S.rec.onerror=function(e){stopRec();setHUD('VOICE ERROR: '+e.error);};S.rec.onend=function(){if(S.recOn)stopRec();};S.rec.start();S.recOn=true;document.getElementById('mbtn').classList.add('rec');document.getElementById('mbtn').textContent='Stop';document.getElementById('vwave').classList.add('on');setHUD('LISTENING... SPEAK NOW, SIR.');}catch(e){stopRec();setHUD('MIC ERROR: '+e.message);}}
+function stopRec(){S.recOn=false;document.getElementById('mbtn').classList.remove('rec');document.getElementById('mbtn').innerHTML='&#127897;&#65039;';document.getElementById('vwave').classList.remove('on');try{if(S.rec)S.rec.stop();}catch(e){}S.rec=null;}
+var LTAGS={'mr-IN':['mr-IN','mr'],'hi-IN':['hi-IN','hi'],'en-US':['en-US','en-GB','en'],'te-IN':['te-IN','te'],'ta-IN':['ta-IN','ta'],'fr-FR':['fr-FR','fr'],'es-ES':['es-ES','es'],'de-DE':['de-DE','de'],'ja-JP':['ja-JP','ja'],'zh-CN':['zh-CN','zh']};
+var FKW=['female','woman','girl','zira','susan','samantha','karen','moira','fiona','veena','heera','lekha','anjali','kanya','aditi'];
+var MKW=['male','man','david','mark','daniel','alex','fred','jorge','ravi','hemant'];
+function isFem(v){var n=(v.name||'').toLowerCase();return FKW.some(function(k){return n.indexOf(k)>=0;});}
+function isMal(v){var n=(v.name||'').toLowerCase();return MKW.some(function(k){return n.indexOf(k)>=0;});}
+function pickVoice(lang,gender){try{if(!window.speechSynthesis)return null;}catch(e){return null;}var all=window.speechSynthesis.getVoices()||[];if(!all.length)return null;var tags=LTAGS[lang]||[lang.split('-')[0]];for(var i=0;i<tags.length;i++){var t=tags[i];var m=all.filter(function(v){return v.lang===t||v.lang.indexOf(t)===0;});if(m.length){var g=m.filter(function(v){return gender==='female'?isFem(v):isMal(v);});if(g.length)return g[0];return m[0];}}var pre=lang.split('-')[0];var bp=all.filter(function(v){return v.lang.indexOf(pre)===0;});if(bp.length){var gp=bp.filter(function(v){return gender==='female'?isFem(v):isMal(v);});if(gp.length)return gp[0];return bp[0];}var en=all.filter(function(v){return v.lang.indexOf('en')===0;});var eg=en.filter(function(v){return gender==='female'?isFem(v):isMal(v);});return eg[0]||en[0]||all[0];}
+function speak(txt){try{if(!window.speechSynthesis||!S.feats.speak)return;window.speechSynthesis.cancel();var clean=String(txt).replace(/[^\w\s.,!?-]/g,'').trim().substring(0,450);var u=new SpeechSynthesisUtterance(clean);u.lang=S.lang;u.rate=parseFloat(S.vRate)||0.95;u.pitch=parseFloat(S.vPitch)||1.0;u.volume=parseFloat(S.vVol)||1.0;var all=window.speechSynthesis.getVoices()||[];if(S.vName){var nv=all.find(function(v){return v.name===S.vName;});u.voice=nv||pickVoice(S.lang,S.vGender);}else{u.voice=pickVoice(S.lang,S.vGender);}var dot=document.getElementById('sdot');if(dot)dot.classList.add('on');u.onend=u.onerror=function(){if(dot)dot.classList.remove('on');};window.speechSynthesis.speak(u);}catch(e){}}
+function buildVL(){try{if(!window.speechSynthesis)return;}catch(e){return;}var all=window.speechSynthesis.getVoices()||[];var sel=document.getElementById('vsel');if(!sel||!all.length)return;var prev=sel.value;sel.innerHTML='<option value="">AUTO</option>';var tags=LTAGS[S.lang]||[S.lang.split('-')[0]];var rel=all.filter(function(v){return tags.some(function(t){return v.lang===t||v.lang.indexOf(t)===0;});});var oth=all.filter(function(v){return !tags.some(function(t){return v.lang===t||v.lang.indexOf(t)===0;});});if(rel.length){var og=document.createElement('optgroup');og.label='-- Selected Language --';rel.forEach(function(v){var o=document.createElement('option');o.value=v.name;o.textContent=(isFem(v)?'F ':isMal(v)?'M ':'- ')+v.name;og.appendChild(o);});sel.appendChild(og);}if(oth.length){var og2=document.createElement('optgroup');og2.label='-- All Voices --';oth.slice(0,40).forEach(function(v){var o=document.createElement('option');o.value=v.name;o.textContent=(isFem(v)?'F ':isMal(v)?'M ':'- ')+v.name;og2.appendChild(o);});sel.appendChild(og2);}if(prev)sel.value=prev;}
+function setGend(g,btn){S.vGender=g;S.vName='';document.querySelectorAll('.vgbtn').forEach(function(b){b.classList.remove('sel');});btn.classList.add('sel');var sel=document.getElementById('vsel');if(sel)sel.value='';buildVL();}
+function prevVoice(){if(!window.speechSynthesis){setHUD('VOICE NOT SUPPORTED.');return;}var pv={'mr-IN':'Namaskar sar, mi JARVIS ahe. Tumchi seva karayala taiyar ahe.','hi-IN':'Namaskar sir, main JARVIS hun. Aapki seva mein hazir hun.','en-US':'Hello Sir, I am JARVIS. All systems are online and ready.','te-IN':'Namaskaram sir, nenu JARVIS ni.','ta-IN':'Vanakkam sir, nan JARVIS.','fr-FR':'Bonjour, je suis JARVIS.','es-ES':'Hola, soy JARVIS.','de-DE':'Hallo, ich bin JARVIS.','ja-JP':'Konnichiwa, watashi wa JARVIS desu.','zh-CN':'Nihao, wo shi JARVIS.'};speak(pv[S.lang]||pv['en-US']);}
+function resizeTin(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,88)+'px';}
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();}}
+async function doSend(){if(S.busy)return;var inp=document.getElementById('tin'),txt=inp.value.trim();var imgs=S.files.filter(function(f){return f&&f.type&&f.type.indexOf('image')===0;});if(!txt&&!S.snap&&!imgs.length)return;inp.value='';inp.style.height='auto';addLog('user',txt||'[MEDIA]',S.snap||undefined);setProc(true);setHUD('PROCESSING... ONE MOMENT, SIR.');var userTxt=txt||(S.snap?'Please analyze this image.':'Hello');S.msgs.push({role:'user',content:userTxt});var key=S.apiKey||'';if(!key){setProc(false);setHUD('API KEY NAAHI! Settings madhe ja -> API Key taka.');speak('Settings madhe API key taka sar.');openPanel('set');return;}var n=new Date();var sys='You are JARVIS, an advanced AI assistant. Reply in SAME language as user (Marathi->Marathi, Hindi->Hindi, English->English). Be smart, helpful, concise. Call user Sir sometimes. Date: '+n.toLocaleDateString('en-IN')+' Time: '+n.toLocaleTimeString('en-IN')+'. Location: Nagpur, Maharashtra, India.';try{var reply='';var type=S.apiType||'gemini';if(type==='gemini'){var parts=[];if(S.snap)parts.push({inlineData:{mimeType:'image/jpeg',data:S.snap.split(',')[1]}});imgs.forEach(function(f){parts.push({inlineData:{mimeType:f.type,data:f.data.split(',')[1]}});});parts.push({text:sys+'\n\nUser: '+userTxt});var hist=[];S.msgs.slice(-8,-1).forEach(function(m){hist.push({role:m.role==='assistant'?'model':'user',parts:[{text:typeof m.content==='string'?m.content:'...'}]});});hist.push({role:'user',parts:parts});var gb={contents:hist,generationConfig:{maxOutputTokens:800,temperature:0.7}};var gurl='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+key;var gres=await fetch(gurl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(gb)});var gd=await gres.json();if(gd.error)throw new Error(gd.error.message||'Gemini Error');if(gd.candidates&&gd.candidates[0]&&gd.candidates[0].content){gd.candidates[0].content.parts.forEach(function(p){if(p.text)reply+=p.text;});}
+}else if(type==='openai'){var om=[{role:'system',content:sys}];S.msgs.slice(-8,-1).forEach(function(m){om.push({role:m.role,content:typeof m.content==='string'?m.content:'...'});});var op=[];if(S.snap)op.push({type:'image_url',image_url:{url:S.snap}});imgs.forEach(function(f){op.push({type:'image_url',image_url:{url:f.data}});});op.push({type:'text',text:userTxt});om.push({role:'user',content:op.length===1?op[0].text:op});var ob={model:'gpt-4o',max_tokens:800,messages:om};var ores=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify(ob)});var od=await ores.json();if(od.error)throw new Error(od.error.message||'OpenAI Error');if(od.choices&&od.choices[0])reply=od.choices[0].message.content||'';
+}else{var uc=[];if(S.snap)uc.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:S.snap.split(',')[1]}});imgs.forEach(function(f){uc.push({type:'image',source:{type:'base64',media_type:f.type,data:f.data.split(',')[1]}});});uc.push({type:'text',text:userTxt});var am=S.msgs.slice(-8,-1).concat([{role:'user',content:uc.length===1?userTxt:uc}]);var ab={model:'claude-sonnet-4-20250514',max_tokens:800,system:sys,messages:am};var ares=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(ab)});var ad=await ares.json();if(ad.error)throw new Error(ad.error.message||'Claude Error');(ad.content||[]).forEach(function(b){if(b.type==='text')reply+=b.text;});}
+if(!reply)reply='Done, Sir.';S.msgs.push({role:'assistant',content:reply});setProc(false);setHUD(reply);addLog('ai',reply);speak(reply);clearFiles();}catch(err){setProc(false);var em=err.message||'Unknown error';setHUD('ERROR: '+em.substring(0,100));addLog('ai','ERROR: '+em);speak('Error aali. Please try again sar.');}}
+var THEMES={cyan:{c1:'#00ffff',c2:'#00d4ff',c3:'#00ff88',c4:'#ff6b00',bg:'#000000'},green:{c1:'#00ff88',c2:'#00cc66',c3:'#00ffff',c4:'#ffaa00',bg:'#000500'},orange:{c1:'#ff8800',c2:'#ffaa00',c3:'#ffcc00',c4:'#ff4400',bg:'#0a0500'},purple:{c1:'#a855f7',c2:'#7c3aed',c3:'#c084fc',c4:'#e879f9',bg:'#05000a'},red:{c1:'#ff3355',c2:'#cc0033',c3:'#ff6688',c4:'#ff8800',bg:'#0a0003'},gold:{c1:'#ffd700',c2:'#ffaa00',c3:'#ffe566',c4:'#ff8800',bg:'#050400'},blue:{c1:'#3b82f6',c2:'#1d4ed8',c3:'#60a5fa',c4:'#a855f7',bg:'#00020a'},white:{c1:'#ffffff',c2:'#cccccc',c3:'#aaffdd',c4:'#ffaa00',bg:'#000000'}};
+function applyTheme(name,el){var t=THEMES[name];if(!t)return;document.querySelectorAll('.tcard').forEach(function(c){c.classList.remove('sel');});el.classList.add('sel');Object.keys(t).forEach(function(k){document.documentElement.style.setProperty('--'+k,t[k]);});document.getElementById('cc1').value=t.c1;document.getElementById('cc4').value=t.c4;document.getElementById('ccb').value=t.bg;}
+function setCV(k,v){document.documentElement.style.setProperty('--'+k,v);}
+function setBr(v){document.getElementById('vid').style.filter='brightness('+v/100+') saturate(1.3)';document.getElementById('vbr').textContent=v+'%';}
+function setHSz(v){document.getElementById('htxt').style.fontSize=v+'px';document.getElementById('vht').textContent=v+'px';}
+function setGrid(v){var op=v/100*0.055;document.getElementById('grid-ov').style.backgroundImage='linear-gradient(rgba(0,255,255,'+op+') 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,255,'+op+') 1px,transparent 1px)';document.getElementById('vgr').textContent=v;}
+function togF(k,el){el.classList.toggle('on');S.feats[k]=el.classList.contains('on');if(k==='scan')document.getElementById('scanline').style.display=S.feats.scan?'':'none';if(k==='grid')document.getElementById('grid-ov').style.display=S.feats.grid?'':'none';if(k==='brk')document.querySelectorAll('.brk').forEach(function(b){b.style.display=S.feats.brk?'':'none';});if(k==='ring')document.getElementById('ring').style.display=S.feats.ring?'':'none';}
+function saveSett(){try{var cfg={br:document.getElementById('sbr').value,ht:document.getElementById('sht').value,gr:document.getElementById('sgr').value,feats:S.feats,vGender:S.vGender,vName:S.vName,vRate:S.vRate,vPitch:S.vPitch,vVol:S.vVol,theme:(document.querySelector('.tcard.sel')||{}).dataset?document.querySelector('.tcard.sel').dataset.t:''};localStorage.setItem('j-cfg',JSON.stringify(cfg));var m=document.getElementById('smsg');m.style.display='block';setTimeout(function(){m.style.display='none';},2000);setHUD('ALL SETTINGS SAVED, SIR.');}catch(e){setHUD('SAVE ERROR: '+e.message);}}
+function loadSett(){loadKey();try{var raw=localStorage.getItem('j-cfg');if(!raw)return;var cfg=JSON.parse(raw);if(cfg.theme){var el=document.querySelector('[data-t="'+cfg.theme+'"]');if(el)applyTheme(cfg.theme,el);}if(cfg.br){document.getElementById('sbr').value=cfg.br;setBr(cfg.br);}if(cfg.ht){document.getElementById('sht').value=cfg.ht;setHSz(cfg.ht);}if(cfg.gr){document.getElementById('sgr').value=cfg.gr;setGrid(cfg.gr);}if(cfg.vGender){S.vGender=cfg.vGender;var gb=document.getElementById(cfg.vGender==='female'?'vgf':'vgm');if(gb){document.querySelectorAll('.vgbtn').forEach(function(b){b.classList.remove('sel');});gb.classList.add('sel');}}if(cfg.vName!==undefined)S.vName=cfg.vName;if(cfg.vRate!==undefined){S.vRate=cfg.vRate;document.getElementById('srt').value=cfg.vRate;document.getElementById('vrt').textContent=parseFloat(cfg.vRate).toFixed(2)+'x';}if(cfg.vPitch!==undefined){S.vPitch=cfg.vPitch;document.getElementById('spt').value=cfg.vPitch;document.getElementById('vpt').textContent=parseFloat(cfg.vPitch).toFixed(2);}if(cfg.vVol!==undefined){S.vVol=cfg.vVol;document.getElementById('svl').value=cfg.vVol;document.getElementById('vvl').textContent=Math.round(cfg.vVol*100)+'%';}if(cfg.feats){Object.keys(cfg.feats).forEach(function(k){S.feats[k]=cfg.feats[k];var te=document.getElementById({scan:'tsc',grid:'tgr',speak:'tsp',brk:'tbr',ring:'trg'}[k]);if(te){if(cfg.feats[k])te.classList.add('on');else te.classList.remove('on');}togF(k,te||{classList:{contains:function(){return cfg.feats[k];},toggle:function(){}}});});}}catch(e){}}
+try{if(window.speechSynthesis){window.speechSynthesis.getVoices();window.speechSynthesis.onvoiceschanged=function(){try{buildVL();}catch(e){}};}}catch(e){}
+window.addEventListener('load',function(){loadSett();startCam();setTimeout(function(){var h=new Date().getHours();var g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';var m=g+', Sir! JARVIS online. Settings madhe Gemini API key taka.';setHUD(m);addLog('ai',m);S.msgs.push({role:'assistant',content:m});setTimeout(buildVL,1000);},1200);});
+</script>
+</body>
+</html>
